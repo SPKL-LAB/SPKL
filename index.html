@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SPKL RODA 2 — Dashboard Monitoring</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+  <!-- Paho MQTT (HiveMQ WebSocket) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/paho-mqtt.min.js"></script>
+
+  <!-- App Stylesheet -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+
+<div class="app-shell">
+
+  <!-- ======================================================
+       HEADER
+       ====================================================== -->
+  <header class="header">
+    <div class="header-brand">
+      <div class="header-logo">⚡</div>
+      <div class="header-title">
+        <h1>SPKL RODA 2</h1>
+        <p>Stasiun Pengisian Kendaraan Listrik</p>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="header-datetime">
+        <span class="date-icon">📅</span>
+        <div class="datetime-text">
+          <div class="date-display" id="dateDisplay">—</div>
+          <div class="time-display" id="timeDisplay">—</div>
+        </div>
+      </div>
+
+      <div class="status-badge" id="systemStatusBadge">
+        <span class="status-dot"></span>
+        <span class="status-text">Sistem Online</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ======================================================
+       SIDEBAR
+       ====================================================== -->
+  <aside class="sidebar">
+    <nav>
+      <div class="nav-item active">
+        <span class="nav-icon">🏠</span>
+        <span>Dashboard</span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon">📊</span>
+        <span>Monitoring</span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon">🕐</span>
+        <span>Riwayat Data</span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon">⚙️</span>
+        <span>Pengaturan</span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon">ℹ️</span>
+        <span>Tentang</span>
+      </div>
+    </nav>
+
+    <!-- Motor Image -->
+    <div class="sidebar-motor">
+      <img src="assets/motor.png" alt="Motor Listrik SPKL RODA 2" />
+    </div>
+  </aside>
+
+  <!-- ======================================================
+       MAIN CONTENT
+       ====================================================== -->
+  <main class="main-content">
+
+    <!-- ── ROW 1: TOP METRICS ──────────────────────────── -->
+    <section class="metrics-row">
+
+      <!-- DC Voltage V0 -->
+      <div class="card metric-card">
+        <div class="card-header">
+          <span class="card-label">DC Voltage</span>
+          <span class="card-id">V0</span>
+        </div>
+        <div class="metric-value-row">
+          <div class="metric-icon blue">⚡</div>
+          <div>
+            <span class="metric-number size-xl blue" id="valDcVoltage">48.25</span>
+            <span class="metric-unit">V</span>
+          </div>
+        </div>
+        <div class="sparkline-container">
+          <canvas id="sparkDcVoltage"></canvas>
+        </div>
+      </div>
+
+      <!-- DC Current V1 -->
+      <div class="card metric-card">
+        <div class="card-header">
+          <span class="card-label">DC Current</span>
+          <span class="card-id">V1</span>
+        </div>
+        <div class="metric-value-row">
+          <div class="metric-icon green">〰️</div>
+          <div>
+            <span class="metric-number size-xl green" id="valDcCurrent">12.35</span>
+            <span class="metric-unit">A</span>
+          </div>
+        </div>
+        <div class="sparkline-container">
+          <canvas id="sparkDcCurrent"></canvas>
+        </div>
+      </div>
+
+      <!-- DC Energy V2 -->
+      <div class="card metric-card">
+        <div class="card-header">
+          <span class="card-label">DC Energy</span>
+          <span class="card-id">V2</span>
+        </div>
+        <div class="metric-value-row">
+          <div class="metric-icon purple">⚡</div>
+          <div>
+            <span class="metric-number size-xl purple" id="valDcEnergy">1.58</span>
+            <span class="metric-unit">kWh</span>
+          </div>
+        </div>
+        <div class="sparkline-container">
+          <canvas id="sparkDcEnergy"></canvas>
+        </div>
+      </div>
+
+      <!-- Daya DC V14 -->
+      <div class="card metric-card">
+        <div class="card-header">
+          <span class="card-label">Daya DC</span>
+          <span class="card-id">V14</span>
+        </div>
+        <div class="metric-value-row">
+          <div class="metric-icon orange">🔥</div>
+          <div>
+            <span class="metric-number size-xl orange" id="valDcPower">593.98</span>
+            <span class="metric-unit">W</span>
+          </div>
+        </div>
+        <div class="sparkline-container">
+          <canvas id="sparkDcPower"></canvas>
+        </div>
+      </div>
+
+      <!-- Suhu Panel V3 -->
+      <div class="card metric-card">
+        <div class="card-header">
+          <span class="card-label">Suhu Panel</span>
+          <span class="card-id">V3</span>
+        </div>
+        <div class="metric-value-row">
+          <div class="metric-icon red">🌡️</div>
+          <div>
+            <span class="metric-number size-xl red" id="valPanelTemp">38.2</span>
+            <span class="metric-unit">°C</span>
+          </div>
+        </div>
+        <div class="sparkline-container">
+          <canvas id="sparkPanelTemp"></canvas>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ── ROW 2: CHARTS + AC METRICS ─────────────────── -->
+    <section class="middle-row">
+
+      <!-- Grafik Voltase DC -->
+      <div class="card chart-card">
+        <div class="card-header">
+          <div>
+            <div class="chart-card-title">Grafik Voltase DC</div>
+            <div class="chart-card-live">Live</div>
+            <div class="chart-axis-label">Volt (V)</div>
+          </div>
+          <span class="card-id">V10</span>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chartDcVoltage"></canvas>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-line" style="background:var(--accent-blue)"></div>
+          DC Voltage
+        </div>
+      </div>
+
+      <!-- AC Metrics Stack -->
+      <div style="display:flex; flex-direction:column; gap:10px;">
+
+        <!-- AC Voltage V4 -->
+        <div class="card ac-metric-card">
+          <div class="ac-metric-icon blue" style="background:rgba(0,212,255,0.1);border:1.5px solid rgba(0,212,255,0.35);">〰️</div>
+          <div class="ac-metric-info">
+            <div style="display:flex;justify-content:space-between;">
+              <span class="ac-metric-label">AC Voltage</span>
+              <span class="card-id">V4</span>
+            </div>
+            <div>
+              <span class="ac-metric-value blue" id="valAcVoltage">221.4</span>
+              <span class="ac-metric-unit">V</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- AC Current V5 -->
+        <div class="card ac-metric-card">
+          <div class="ac-metric-icon green" style="background:rgba(0,255,136,0.1);border:1.5px solid rgba(0,255,136,0.35);">〰️</div>
+          <div class="ac-metric-info">
+            <div style="display:flex;justify-content:space-between;">
+              <span class="ac-metric-label">AC Current</span>
+              <span class="card-id">V5</span>
+            </div>
+            <div>
+              <span class="ac-metric-value green" id="valAcCurrent">2.45</span>
+              <span class="ac-metric-unit">A</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- AC Daya V6 -->
+        <div class="card ac-metric-card">
+          <div class="ac-metric-icon orange" style="background:rgba(255,140,0,0.1);border:1.5px solid rgba(255,140,0,0.35);">〰️</div>
+          <div class="ac-metric-info">
+            <div style="display:flex;justify-content:space-between;">
+              <span class="ac-metric-label">AC Daya</span>
+              <span class="card-id">V6</span>
+            </div>
+            <div>
+              <span class="ac-metric-value orange" id="valAcPower">540.33</span>
+              <span class="ac-metric-unit">W</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- AC Frekuensi V7 -->
+        <div class="card ac-metric-card">
+          <div class="ac-metric-icon purple" style="background:rgba(180,79,255,0.1);border:1.5px solid rgba(180,79,255,0.35);">〰️</div>
+          <div class="ac-metric-info">
+            <div style="display:flex;justify-content:space-between;">
+              <span class="ac-metric-label">AC Frekuensi</span>
+              <span class="card-id">V7</span>
+            </div>
+            <div>
+              <span class="ac-metric-value purple" id="valAcFrequency">50.02</span>
+              <span class="ac-metric-unit">Hz</span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /AC stack -->
+
+      <!-- Grafik Voltase AC -->
+      <div class="card chart-card">
+        <div class="card-header">
+          <div>
+            <div class="chart-card-title">Grafik Voltase AC</div>
+            <div class="chart-card-live">Live</div>
+            <div class="chart-axis-label">Volt (V)</div>
+          </div>
+          <span class="card-id">V11</span>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chartAcVoltage"></canvas>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-line" style="background:var(--accent-blue)"></div>
+          AC Voltage
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ── ROW 3: STATUS CARDS ────────────────────────── -->
+    <section class="bottom-section">
+
+      <!-- Status Inverter V8 -->
+      <div class="card status-card">
+        <div class="card-header">
+          <span class="card-label">Status Inverter</span>
+          <span class="card-id">V8</span>
+        </div>
+        <div class="status-value-row">
+          <div class="status-check green" id="iconInvStatus">✅</div>
+          <div>
+            <div class="status-text-main" id="valInvStatus">Normal</div>
+            <div class="status-text-sub" id="valInvSubtext">Inverter OK</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Code V9 -->
+      <div class="card status-card">
+        <div class="card-header">
+          <span class="card-label">Error Code</span>
+          <span class="card-id">V9</span>
+        </div>
+        <div style="margin-top:8px;">
+          <div class="error-number" id="valErrorCode">0</div>
+          <div class="status-text-sub" id="valErrorSubtext">Tidak ada error</div>
+        </div>
+      </div>
+
+      <!-- RSSI WiFi V12 -->
+      <div class="card status-card">
+        <div class="card-header">
+          <span class="card-label">RSSI Wifi</span>
+          <span class="card-id">V12</span>
+        </div>
+        <div style="margin-top:4px;">
+          <div class="wifi-icon">📶</div>
+          <div class="rssi-value" id="valRssi">-65 dBm</div>
+          <div class="rssi-label" id="labelRssi">Sinyal Kuat</div>
+        </div>
+      </div>
+
+      <!-- Status ESP32 V13 -->
+      <div class="card status-card">
+        <div class="card-header">
+          <span class="card-label">Status ESP32</span>
+          <span class="card-id">V13</span>
+        </div>
+        <div class="status-value-row">
+          <span class="esp32-icon" id="iconEsp32">🖥️</span>
+          <div>
+            <div class="esp32-status" id="valEsp32">Online</div>
+            <div class="status-text-sub">Terhubung</div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ── ROW 4: BATTERY + SYS INFO ─────────────────── -->
+    <section class="battery-row">
+
+      <!-- Tegangan Battery Panel V17 -->
+      <div class="card battery-card">
+        <div class="card-header">
+          <span class="card-label">Tegangan Battery Panel</span>
+          <span class="card-id">V17</span>
+        </div>
+        <div class="battery-value-row">
+          <span class="battery-icon-big">🔋</span>
+          <div>
+            <span class="battery-number" id="valBattVoltage">48.15</span>
+            <span class="metric-unit">V</span>
+          </div>
+        </div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill green" id="barBattVoltage" style="width: 100%"></div>
+        </div>
+      </div>
+
+      <!-- Kapasitas Battery V18 -->
+      <div class="card battery-card">
+        <div class="card-header">
+          <span class="card-label">Kapasitas Battery</span>
+          <span class="card-id">V18</span>
+        </div>
+        <div class="battery-value-row">
+          <span class="battery-icon-big" style="color:var(--accent-purple)">🪫</span>
+          <div>
+            <span class="battery-number" style="color:var(--accent-purple)" id="valBattCapacity">78</span>
+            <span class="metric-unit">%</span>
+          </div>
+        </div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill purple" id="barBattCapacity" style="width: 78%"></div>
+        </div>
+      </div>
+
+      <!-- Informasi Sistem -->
+      <div class="card sys-info-card">
+        <div class="sys-info-title">Informasi Sistem</div>
+        <div class="sys-info-row">
+          <span class="sys-info-key">Perangkat</span>
+          <span class="sys-info-val" id="sysDevice">SPKL RODA 2</span>
+        </div>
+        <div class="sys-info-row">
+          <span class="sys-info-key">Mikrokontroler</span>
+          <span class="sys-info-val" id="sysMcu">ESP32</span>
+        </div>
+        <div class="sys-info-row">
+          <span class="sys-info-key">Waktu Aktif</span>
+          <span class="sys-info-val" id="sysUptime">—</span>
+        </div>
+        <div class="sys-info-row">
+          <span class="sys-info-key">Update Terakhir</span>
+          <span class="sys-info-val" id="sysUpdate">—</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      © 2026 SPKL RODA 2 — Monitoring Stasiun Pengisian Kendaraan Listrik
+    </footer>
+
+  </main><!-- /main-content -->
+
+</div><!-- /app-shell -->
+
+<!-- ======================================================
+     MQTT CONNECTION INDICATOR (fixed bottom-right)
+     ====================================================== -->
+<div class="mqtt-indicator">
+  <div class="mqtt-dot connecting"></div>
+  <span class="mqtt-label">Menghubungkan...</span>
+</div>
+
+<!-- ======================================================
+     SCRIPTS — urutan penting!
+     1. mqtt.js   → data layer (MQTTManager)
+     2. charts.js → visualization layer (ChartManager)
+     3. ui.js     → UI layer (UIManager)
+     4. app.js    → entry point (bootstrap)
+     ====================================================== -->
+<script src="js/mqtt.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
